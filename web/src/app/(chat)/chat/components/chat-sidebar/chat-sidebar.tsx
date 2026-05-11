@@ -26,7 +26,7 @@ export default function ChatSidebar({
         <NavChats chats={data.chats} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
