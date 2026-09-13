@@ -3,20 +3,19 @@ import { Paperclip, Send, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AttachedFilesBar from "./attached-files-bar";
 import QuickSuggestions from "./quick-suggestions";
-import { Message } from "../../types";
 
 export default function ChatComposer({
-  setMessages,
+  onSend,
 }: {
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
+  onSend: (question: string) => Promise<void>;
 }) {
   const [draft, setDraft] = React.useState("");
   const [files, setFiles] = React.useState<File[]>([]);
   const [smartPrompts, setSmartPrompts] = React.useState(true);
+  const [isSending, setIsSending] = React.useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const fileRef = React.useRef<HTMLInputElement | null>(null);
-  const idRef = React.useRef(1);
 
   const resize = () => {
     const el = textareaRef.current;
@@ -27,30 +26,20 @@ export default function ChatComposer({
 
   React.useEffect(resize, [draft]);
 
-  const send = () => {
-    if (!draft.trim()) return;
-
-    setMessages((m) => [
-      ...m,
-      { id: idRef.current++, role: "user", content: draft },
-      {
-        id: idRef.current++,
-        role: "assistant",
-        content: "Assistant response placeholder.",
-      },
-    ]);
+  const send = async () => {
+    const question = draft.trim();
+    if (!question || isSending) return;
 
     setDraft("");
     setFiles([]);
-    scrollToBottom();
-  };
+    setIsSending(true);
 
-  function scrollToBottom() {
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth",
-    });
-  }
+    try {
+      await onSend(question);
+    } finally {
+      setIsSending(false);
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-2">
@@ -95,7 +84,7 @@ export default function ChatComposer({
           <Sparkles className="size-4" />
         </Button>
 
-        <Button size="icon" onClick={send} disabled={!draft.trim()}>
+        <Button size="icon" onClick={send} disabled={!draft.trim() || isSending}>
           <Send className="size-4" />
         </Button>
       </div>
