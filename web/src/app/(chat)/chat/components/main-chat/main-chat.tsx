@@ -8,7 +8,71 @@ import { Message } from "../../types";
 
 export default function MainChat() {
   const [messages, setMessages] = React.useState<Message[]>([]);
+  const nextMessageId = React.useRef(1);
   const hasMessages = messages.length > 0;
+
+  const askQuestion = async (question: string) => {
+    const trimmedQuestion = question.trim();
+
+    if (!trimmedQuestion) return;
+
+    setMessages((previousMessages) => [
+      ...previousMessages,
+      {
+        id: nextMessageId.current++,
+        role: "user",
+        content: trimmedQuestion,
+      },
+    ]);
+
+    try {
+      const response = await fetch("/api/chat/ask-question", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question: trimmedQuestion }),
+      });
+      const data: unknown = await response.json().catch(() => null);
+      const responseData =
+        typeof data === "object" && data !== null
+          ? (data as { answer?: unknown; message?: unknown })
+          : undefined;
+      const answer = responseData?.answer;
+      const errorMessage = responseData?.message;
+
+      if (!response.ok) {
+        throw new Error(
+          typeof errorMessage === "string"
+            ? errorMessage
+            : "Unable to get an answer from the codebase assistant."
+        );
+      }
+
+      if (typeof answer !== "string") {
+        throw new Error("The codebase assistant returned an invalid response.");
+      }
+
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        {
+          id: nextMessageId.current++,
+          role: "assistant",
+          content: answer,
+        },
+      ]);
+    } catch (error: unknown) {
+      setMessages((previousMessages) => [
+        ...previousMessages,
+        {
+          id: nextMessageId.current++,
+          role: "assistant",
+          content:
+            error instanceof Error
+              ? error.message
+              : "Unable to get an answer from the codebase assistant.",
+        },
+      ]);
+    }
+  };
 
   return (
     <div className="flex h-full min-h-screen flex-col bg-[linear-gradient(180deg,color-mix(in_oklab,var(--background)_88%,var(--muted))_0%,var(--background)_26%,var(--background)_100%)]">
@@ -43,7 +107,7 @@ export default function MainChat() {
             hasMessages ? "max-w-3xl" : "max-w-4xl",
           )}
         >
-          <ChatComposer setMessages={setMessages} />
+          <ChatComposer onSend={askQuestion} />
         </div>
       </div>
     </div>

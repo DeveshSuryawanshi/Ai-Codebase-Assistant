@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { env } from "@/env";
 
 const protectedRoutes = ["/chat", "/index-repo"];
 const publicRoutes = ["/login"];
@@ -12,7 +13,7 @@ export default async function proxy(req: NextRequest) {
   const isPublicRoute = publicRoutes.includes(path);
   const token = await getToken({
     req,
-    secret: process.env.AUTH_SECRET,
+    secret: env.AUTH_SECRET,
   });
 
   if (isProtectedRoute && !token) {

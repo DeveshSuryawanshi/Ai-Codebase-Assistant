@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import Image from "next/image";
 
 export default function LoginPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
@@ -104,6 +105,13 @@ export default function LoginPage() {
             variant="outline"
             onClick={() => signIn("github", { callbackUrl: "/chat" })}
           >
+            <Image
+              src="/assets/icons/github.png"
+              alt="GitHub Logo"
+              width={20}
+              height={20}
+              className="mr-2 bg-white rounded-full"
+            />
             GitHub
           </Button>
           <Button
@@ -111,6 +119,13 @@ export default function LoginPage() {
             variant="outline"
             onClick={() => signIn("google", { callbackUrl: "/chat" })}
           >
+            <Image
+              src="/assets/icons/google.png"
+              alt="GitHub Logo"
+              width={20}
+              height={20}
+              className="mr-2 "
+            />
             Google
           </Button>
         </div>
